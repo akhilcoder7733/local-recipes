@@ -1,0 +1,1718 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="fresh-kitchen">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Local Recipes &amp; Meal Prep Manager</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800;900&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      fontFamily: {
+        display: ['Playfair Display', 'serif'],
+        body: ['DM Sans', 'sans-serif'],
+      }
+    }
+  }
+}
+</script>
+<style>
+/* ===== THEME VARIABLES ===== */
+[data-theme="fresh-kitchen"] {
+  --bg-primary: #ffffff; --bg-secondary: #f0fdf4; --bg-card: #ffffff;
+  --bg-card-hover: #f0fdf4; --bg-input: #f9fafb; --bg-nav: rgba(255,255,255,0.85);
+  --text-primary: #111827; --text-secondary: #374151; --text-muted: #9ca3af;
+  --accent: #16a34a; --accent-light: #dcfce7; --accent-hover: #15803d;
+  --accent-rgb: 22,163,74; --border: #e5e7eb; --shadow: rgba(0,0,0,0.06);
+  --overlay: rgba(0,0,0,0.5); --tag-bg: #f3f4f6; --skeleton: #e5e7eb;
+  --skeleton-shine: #f3f4f6; --progress-bg: #e5e7eb; --empty-bg: #f9fafb;
+}
+[data-theme="cream-spice"] {
+  --bg-primary: #fffaf5; --bg-secondary: #fef3e2; --bg-card: #ffffff;
+  --bg-card-hover: #fff7ed; --bg-input: #fef7ed; --bg-nav: rgba(255,250,245,0.9);
+  --text-primary: #1c1917; --text-secondary: #44403c; --text-muted: #a8a29e;
+  --accent: #ea580c; --accent-light: #ffedd5; --accent-hover: #c2410c;
+  --accent-rgb: 234,88,12; --border: #e7e5e4; --shadow: rgba(0,0,0,0.06);
+  --overlay: rgba(0,0,0,0.5); --tag-bg: #f5f0eb; --skeleton: #e7e5e4;
+  --skeleton-shine: #f5f0eb; --progress-bg: #e7e5e4; --empty-bg: #fef7ed;
+}
+[data-theme="midnight-chef"] {
+  --bg-primary: #0f172a; --bg-secondary: #1e293b; --bg-card: #1e293b;
+  --bg-card-hover: #253349; --bg-input: #1e293b; --bg-nav: rgba(15,23,42,0.9);
+  --text-primary: #f1f5f9; --text-secondary: #cbd5e1; --text-muted: #64748b;
+  --accent: #10b981; --accent-light: #064e3b; --accent-hover: #059669;
+  --accent-rgb: 16,185,129; --border: #334155; --shadow: rgba(0,0,0,0.3);
+  --overlay: rgba(0,0,0,0.7); --tag-bg: #334155; --skeleton: #334155;
+  --skeleton-shine: #475569; --progress-bg: #334155; --empty-bg: #1e293b;
+}
+[data-theme="gourmet-night"] {
+  --bg-primary: #1c1917; --bg-secondary: #292524; --bg-card: #292524;
+  --bg-card-hover: #33302e; --bg-input: #292524; --bg-nav: rgba(28,25,23,0.92);
+  --text-primary: #fafaf9; --text-secondary: #d6d3d1; --text-muted: #78716c;
+  --accent: #f59e0b; --accent-light: #451a03; --accent-hover: #d97706;
+  --accent-rgb: 245,158,11; --border: #44403c; --shadow: rgba(0,0,0,0.4);
+  --overlay: rgba(0,0,0,0.7); --tag-bg: #44403c; --skeleton: #44403c;
+  --skeleton-shine: #57534e; --progress-bg: #44403c; --empty-bg: #292524;
+}
+
+/* ===== BASE ===== */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background 0.4s ease, color 0.4s ease;
+  overflow-x: hidden;
+}
+::selection { background: rgba(var(--accent-rgb), 0.25); }
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--bg-secondary); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+/* ===== ANIMATIONS ===== */
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes scaleReveal { from { opacity: 0; transform: scale(0.92); } to { opacity: 1; transform: scale(1); } }
+@keyframes float1 { 0%,100% { transform: translateY(0) rotate(-2deg); } 50% { transform: translateY(-14px) rotate(1deg); } }
+@keyframes float2 { 0%,100% { transform: translateY(0) rotate(3deg); } 50% { transform: translateY(-18px) rotate(-1deg); } }
+@keyframes float3 { 0%,100% { transform: translateY(0) rotate(-1deg); } 50% { transform: translateY(-10px) rotate(2deg); } }
+@keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.15); } }
+@keyframes heartBeat { 0% { transform: scale(1); } 15% { transform: scale(1.3); } 30% { transform: scale(1); } 45% { transform: scale(1.15); } 60% { transform: scale(1); } }
+@keyframes skeleton { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+@keyframes toastIn { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+@keyframes toastOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(120%); opacity: 0; } }
+@keyframes checkmark { 0% { transform: scale(0); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
+@keyframes countUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes shimmer { 0% { background-position: -1000px 0; } 100% { background-position: 1000px 0; } }
+
+.anim-fade { animation: fadeIn 0.5s ease forwards; }
+.anim-slide { animation: slideUp 0.6s ease forwards; }
+.anim-scale { animation: scaleReveal 0.4s ease forwards; }
+.float-1 { animation: float1 6s ease-in-out infinite; }
+.float-2 { animation: float2 7s ease-in-out infinite 0.5s; }
+.float-3 { animation: float3 5s ease-in-out infinite 1s; }
+.heart-anim { animation: heartBeat 0.6s ease; }
+.check-anim { animation: checkmark 0.3s ease; }
+.toast-in { animation: toastIn 0.4s ease forwards; }
+.toast-out { animation: toastOut 0.3s ease forwards; }
+
+/* Skeleton */
+.skeleton {
+  background: linear-gradient(90deg, var(--skeleton) 25%, var(--skeleton-shine) 50%, var(--skeleton) 75%);
+  background-size: 200% 100%;
+  animation: skeleton 1.5s ease infinite;
+  border-radius: 8px;
+}
+
+/* Scroll reveal */
+.reveal { opacity: 0; transform: translateY(30px); transition: opacity 0.6s ease, transform 0.6s ease; }
+.reveal.visible { opacity: 1; transform: translateY(0); }
+
+/* Transitions for theme */
+.theme-transition,
+.theme-transition *,
+.theme-transition *::before,
+.theme-transition *::after {
+  transition: background 0.4s ease, color 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease !important;
+}
+
+/* View transitions */
+.view-section { display: none; }
+.view-section.active { display: block; animation: fadeIn 0.35s ease; }
+
+/* Custom horizontal scroll */
+.scroll-x { overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+.scroll-x::-webkit-scrollbar { display: none; }
+.scroll-x > * { scroll-snap-align: start; }
+
+/* Recipe card */
+.recipe-card { transition: transform 0.3s ease, box-shadow 0.3s ease; }
+.recipe-card:hover { transform: translateY(-6px); box-shadow: 0 20px 40px var(--shadow); }
+.recipe-card:hover .recipe-img { transform: scale(1.08); }
+.recipe-img { transition: transform 0.5s ease; }
+
+/* Filter pill */
+.filter-pill { transition: all 0.2s ease; cursor: pointer; user-select: none; }
+.filter-pill:hover { opacity: 0.85; }
+.filter-pill.active { background: var(--accent) !important; color: #fff !important; border-color: var(--accent) !important; }
+
+/* Modal */
+.modal-backdrop { transition: opacity 0.3s ease; }
+.modal-content { transition: transform 0.3s ease, opacity 0.3s ease; }
+.modal-backdrop.hidden { opacity: 0; pointer-events: none; }
+.modal-backdrop.hidden .modal-content { transform: scale(0.92); opacity: 0; }
+
+/* Nav link */
+.nav-link { position: relative; transition: color 0.2s ease; }
+.nav-link::after { content: ''; position: absolute; bottom: -4px; left: 0; width: 0; height: 2px; background: var(--accent); transition: width 0.3s ease; border-radius: 1px; }
+.nav-link:hover::after, .nav-link.active::after { width: 100%; }
+.nav-link.active { color: var(--accent); }
+
+/* Ingredient check */
+.ingredient-item.checked .ingredient-name { text-decoration: line-through; color: var(--text-muted); }
+.ingredient-item .check-box { transition: all 0.2s ease; }
+
+/* Mobile bottom nav */
+.bottom-nav { display: none; }
+@media (max-width: 768px) { .bottom-nav { display: flex; } .desktop-nav { display: none !important; } }
+
+/* Progress bar */
+.progress-fill { transition: width 0.8s ease; }
+
+/* Search suggestions */
+.search-suggestions { max-height: 240px; overflow-y: auto; }
+</style>
+</head>
+<body class="font-body min-h-screen">
+
+<!-- Toast Container -->
+<div id="toastContainer" class="fixed top-4 right-4 z-[100] flex flex-col gap-2 pointer-events-none" style="max-width:360px;"></div>
+
+<!-- ===== DESKTOP NAVIGATION ===== -->
+<nav class="desktop-nav sticky top-0 z-50 border-b" style="background:var(--bg-nav);backdrop-filter:blur(16px);border-color:var(--border);">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center justify-between h-16">
+      <!-- Logo -->
+      <a href="#" onclick="switchView('recipes');return false;" class="flex items-center gap-2 flex-shrink-0">
+        <div class="w-9 h-9 rounded-xl flex items-center justify-center" style="background:var(--accent);">
+          <i class="fa-solid fa-utensils text-white text-sm"></i>
+        </div>
+        <span class="font-display font-bold text-lg" style="color:var(--text-primary);">MealPrep</span>
+      </a>
+      <!-- Nav Links -->
+      <div class="hidden md:flex items-center gap-6">
+        <a href="#" class="nav-link active text-sm font-medium" style="color:var(--accent);" data-view="recipes" onclick="switchView('recipes');return false;">Recipes</a>
+        <a href="#" class="nav-link text-sm font-medium" style="color:var(--text-secondary);" data-view="planner" onclick="switchView('planner');return false;">Meal Planner</a>
+        <a href="#" class="nav-link text-sm font-medium" style="color:var(--text-secondary);" data-view="grocery" onclick="switchView('grocery');return false;">Grocery List</a>
+        <a href="#" class="nav-link text-sm font-medium" style="color:var(--text-secondary);" data-view="favorites" onclick="switchView('favorites');return false;">Favorites</a>
+      </div>
+      <!-- Right Side -->
+      <div class="flex items-center gap-3">
+        <!-- Search -->
+        <div class="relative hidden sm:block">
+          <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-xs" style="color:var(--text-muted);"></i>
+          <input id="navSearch" type="text" placeholder="Search recipes..." class="pl-9 pr-4 py-2 rounded-xl text-sm border focus:outline-none focus:ring-2 w-48 lg:w-56" style="background:var(--bg-input);border-color:var(--border);color:var(--text-primary);--tw-ring-color:rgba(var(--accent-rgb),0.3);" oninput="handleSearch(this.value)" onfocus="showSuggestions()" onblur="setTimeout(hideSuggestions,200)">
+          <div id="searchSuggestions" class="search-suggestions absolute top-full left-0 right-0 mt-1 rounded-xl border shadow-lg overflow-hidden hidden" style="background:var(--bg-card);border-color:var(--border);z-index:60;"></div>
+        </div>
+        <!-- Theme Switcher -->
+        <div class="relative">
+          <button id="themeBtn" onclick="toggleThemeDropdown()" class="w-9 h-9 rounded-xl border flex items-center justify-center transition-colors" style="background:var(--bg-input);border-color:var(--border);" aria-label="Switch theme">
+            <i class="fa-solid fa-palette text-sm" style="color:var(--text-secondary);"></i>
+          </button>
+          <div id="themeDropdown" class="absolute right-0 top-full mt-2 w-52 rounded-xl border shadow-xl overflow-hidden hidden" style="background:var(--bg-card);border-color:var(--border);z-index:60;">
+            <div class="p-2">
+              <button onclick="setTheme('fresh-kitchen')" class="theme-opt w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-left transition-colors hover:opacity-80" style="color:var(--text-primary);">
+                <span class="w-5 h-5 rounded-full flex-shrink-0" style="background:linear-gradient(135deg,#ffffff,#dcfce7);border:1px solid #e5e7eb;"></span>Fresh Kitchen
+              </button>
+              <button onclick="setTheme('cream-spice')" class="theme-opt w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-left transition-colors hover:opacity-80" style="color:var(--text-primary);">
+                <span class="w-5 h-5 rounded-full flex-shrink-0" style="background:linear-gradient(135deg,#fffaf5,#ffedd5);border:1px solid #e7e5e4;"></span>Cream &amp; Spice
+              </button>
+              <button onclick="setTheme('midnight-chef')" class="theme-opt w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-left transition-colors hover:opacity-80" style="color:var(--text-primary);">
+                <span class="w-5 h-5 rounded-full flex-shrink-0" style="background:linear-gradient(135deg,#0f172a,#10b981);border:1px solid #334155;"></span>Midnight Chef
+              </button>
+              <button onclick="setTheme('gourmet-night')" class="theme-opt w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-left transition-colors hover:opacity-80" style="color:var(--text-primary);">
+                <span class="w-5 h-5 rounded-full flex-shrink-0" style="background:linear-gradient(135deg,#1c1917,#f59e0b);border:1px solid #44403c;"></span>Gourmet Night
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- ===== MOBILE SEARCH BAR ===== -->
+<div class="sm:hidden px-4 pt-3 pb-1" style="background:var(--bg-primary);">
+  <div class="relative">
+    <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-xs" style="color:var(--text-muted);"></i>
+    <input type="text" placeholder="Search recipes..." class="w-full pl-9 pr-4 py-2.5 rounded-xl text-sm border focus:outline-none focus:ring-2" style="background:var(--bg-input);border-color:var(--border);color:var(--text-primary);--tw-ring-color:rgba(var(--accent-rgb),0.3);" oninput="handleSearch(this.value)">
+  </div>
+</div>
+
+<!-- ===== HERO SECTION ===== -->
+<section id="heroSection" class="relative overflow-hidden" style="background:var(--bg-secondary);">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20 lg:py-24">
+    <div class="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+      <!-- Text -->
+      <div class="anim-slide">
+        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold mb-6" style="background:var(--accent-light);color:var(--accent);">
+          <i class="fa-solid fa-sparkles"></i> Your Kitchen, Organized
+        </div>
+        <h1 class="font-display text-4xl sm:text-5xl lg:text-6xl font-900 leading-tight mb-5" style="color:var(--text-primary);">
+          Plan Meals.<br>Organize Recipes.<br>Cook Smarter.
+        </h1>
+        <p class="text-base lg:text-lg mb-8 max-w-lg leading-relaxed" style="color:var(--text-secondary);">
+          Organize weekly meals, manage grocery lists, and scale ingredients instantly. Your all-in-one kitchen companion for stress-free cooking.
+        </p>
+        <div class="flex flex-wrap gap-3">
+          <button onclick="switchView('recipes');document.getElementById('recipesSection').scrollIntoView({behavior:'smooth'})" class="px-7 py-3 rounded-xl font-semibold text-sm text-white transition-all hover:opacity-90 hover:shadow-lg" style="background:var(--accent);">
+            <i class="fa-solid fa-compass mr-2"></i>Browse Recipes
+          </button>
+          <button onclick="switchView('planner')" class="px-7 py-3 rounded-xl font-semibold text-sm border transition-all hover:opacity-80" style="border-color:var(--border);color:var(--text-primary);background:var(--bg-card);">
+            <i class="fa-regular fa-calendar mr-2"></i>Weekly Planner
+          </button>
+        </div>
+      </div>
+      <!-- Image Collage -->
+      <div class="relative hidden lg:block h-[420px]">
+        <div class="absolute top-0 left-8 w-56 h-40 rounded-2xl overflow-hidden shadow-xl float-1">
+          <img src="https://picsum.photos/seed/foodhero1/500/360.jpg" alt="Food" class="w-full h-full object-cover" loading="lazy">
+        </div>
+        <div class="absolute top-12 right-4 w-64 h-48 rounded-2xl overflow-hidden shadow-xl float-2">
+          <img src="https://picsum.photos/seed/foodhero2/560/420.jpg" alt="Food" class="w-full h-full object-cover" loading="lazy">
+        </div>
+        <div class="absolute bottom-0 left-20 w-52 h-36 rounded-2xl overflow-hidden shadow-xl float-3">
+          <img src="https://picsum.photos/seed/foodhero3/480/330.jpg" alt="Food" class="w-full h-full object-cover" loading="lazy">
+        </div>
+        <div class="absolute bottom-8 right-16 w-44 h-44 rounded-2xl overflow-hidden shadow-xl float-1" style="animation-delay:1s;">
+          <img src="https://picsum.photos/seed/foodhero4/400/400.jpg" alt="Food" class="w-full h-full object-cover" loading="lazy">
+        </div>
+        <!-- Decorative circles -->
+        <div class="absolute -top-6 -left-6 w-24 h-24 rounded-full opacity-20" style="background:var(--accent);"></div>
+        <div class="absolute -bottom-4 -right-4 w-32 h-32 rounded-full opacity-10" style="background:var(--accent);"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== COLLECTIONS SECTION ===== -->
+<section class="py-10 md:py-14" style="background:var(--bg-primary);">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center justify-between mb-6 reveal">
+      <h2 class="font-display text-2xl font-bold" style="color:var(--text-primary);">Collections</h2>
+      <button onclick="switchView('recipes')" class="text-sm font-medium transition-colors hover:opacity-70" style="color:var(--accent);">View All <i class="fa-solid fa-arrow-right ml-1 text-xs"></i></button>
+    </div>
+    <div id="collectionsRow" class="scroll-x flex gap-4 pb-2 reveal"></div>
+  </div>
+</section>
+
+<!-- ===== MAIN CONTENT AREA ===== -->
+<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
+
+  <!-- RECIPES VIEW -->
+  <section id="recipesSection" class="view-section active py-6">
+    <!-- Filters -->
+    <div class="flex flex-wrap gap-2 mb-8 reveal" id="filterBar"></div>
+    <!-- Grid -->
+    <div id="recipeGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"></div>
+    <!-- Empty State -->
+    <div id="recipesEmpty" class="hidden text-center py-20">
+      <div class="w-24 h-24 rounded-full mx-auto mb-5 flex items-center justify-center" style="background:var(--empty-bg);">
+        <i class="fa-solid fa-bowl-food text-3xl" style="color:var(--text-muted);"></i>
+      </div>
+      <h3 class="font-display text-xl font-bold mb-2" style="color:var(--text-primary);">No recipes found</h3>
+      <p class="text-sm" style="color:var(--text-muted);">Try adjusting your filters or search query.</p>
+    </div>
+  </section>
+
+  <!-- MEAL PLANNER VIEW -->
+  <section id="plannerSection" class="view-section py-6">
+    <div class="flex items-center justify-between mb-6">
+      <h2 class="font-display text-2xl font-bold" style="color:var(--text-primary);">Weekly Meal Planner</h2>
+      <button onclick="clearMealPlan()" class="text-sm font-medium px-4 py-2 rounded-lg border transition-colors hover:opacity-80" style="border-color:var(--border);color:var(--text-secondary);background:var(--bg-card);">Clear All</button>
+    </div>
+    <!-- Desktop Planner Grid -->
+    <div class="hidden md:block overflow-x-auto scroll-x rounded-2xl border" style="border-color:var(--border);">
+      <table class="w-full min-w-[800px]" style="border-collapse:separate;border-spacing:0;">
+        <thead>
+          <tr>
+            <th class="p-3 text-left text-xs font-semibold uppercase tracking-wider w-24" style="color:var(--text-muted);background:var(--bg-secondary);border-bottom:1px solid var(--border);"></th>
+            <th class="p-3 text-center text-xs font-semibold uppercase tracking-wider" style="color:var(--text-muted);background:var(--bg-secondary);border-bottom:1px solid var(--border);border-left:1px solid var(--border);">Mon</th>
+            <th class="p-3 text-center text-xs font-semibold uppercase tracking-wider" style="color:var(--text-muted);background:var(--bg-secondary);border-bottom:1px solid var(--border);border-left:1px solid var(--border);">Tue</th>
+            <th class="p-3 text-center text-xs font-semibold uppercase tracking-wider" style="color:var(--text-muted);background:var(--bg-secondary);border-bottom:1px solid var(--border);border-left:1px solid var(--border);">Wed</th>
+            <th class="p-3 text-center text-xs font-semibold uppercase tracking-wider" style="color:var(--text-muted);background:var(--bg-secondary);border-bottom:1px solid var(--border);border-left:1px solid var(--border);">Thu</th>
+            <th class="p-3 text-center text-xs font-semibold uppercase tracking-wider" style="color:var(--text-muted);background:var(--bg-secondary);border-bottom:1px solid var(--border);border-left:1px solid var(--border);">Fri</th>
+            <th class="p-3 text-center text-xs font-semibold uppercase tracking-wider" style="color:var(--text-muted);background:var(--bg-secondary);border-bottom:1px solid var(--border);border-left:1px solid var(--border);">Sat</th>
+            <th class="p-3 text-center text-xs font-semibold uppercase tracking-wider" style="color:var(--text-muted);background:var(--bg-secondary);border-bottom:1px solid var(--border);border-left:1px solid var(--border);">Sun</th>
+          </tr>
+        </thead>
+        <tbody id="plannerGridDesktop"></tbody>
+      </table>
+    </div>
+    <!-- Mobile Planner Cards -->
+    <div id="plannerGridMobile" class="md:hidden flex flex-col gap-4"></div>
+    <!-- Empty Planner State -->
+    <div id="plannerEmpty" class="hidden text-center py-16">
+      <div class="w-24 h-24 rounded-full mx-auto mb-5 flex items-center justify-center" style="background:var(--empty-bg);">
+        <i class="fa-regular fa-calendar text-3xl" style="color:var(--text-muted);"></i>
+      </div>
+      <h3 class="font-display text-xl font-bold mb-2" style="color:var(--text-primary);">No meals planned yet</h3>
+      <p class="text-sm mb-6" style="color:var(--text-muted);">Click on any slot to start planning your week.</p>
+    </div>
+  </section>
+
+  <!-- GROCERY LIST VIEW -->
+  <section id="grocerySection" class="view-section py-6">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="font-display text-2xl font-bold" style="color:var(--text-primary);">Grocery List</h2>
+      <button onclick="generateGroceryList()" class="px-4 py-2 rounded-lg text-sm font-semibold text-white transition-all hover:opacity-90" style="background:var(--accent);">
+        <i class="fa-solid fa-rotate mr-1"></i>Refresh from Planner
+      </button>
+    </div>
+    <!-- Progress Bar -->
+    <div class="mb-6 p-4 rounded-xl border" style="background:var(--bg-card);border-color:var(--border);">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-sm font-medium" style="color:var(--text-secondary);">Shopping Progress</span>
+        <span id="groceryProgress" class="text-sm font-bold" style="color:var(--accent);">0 / 0</span>
+      </div>
+      <div class="w-full h-2.5 rounded-full overflow-hidden" style="background:var(--progress-bg);">
+        <div id="groceryBar" class="progress-fill h-full rounded-full" style="width:0%;background:var(--accent);"></div>
+      </div>
+    </div>
+    <div id="groceryList"></div>
+    <div id="groceryEmpty" class="hidden text-center py-16">
+      <div class="w-24 h-24 rounded-full mx-auto mb-5 flex items-center justify-center" style="background:var(--empty-bg);">
+        <i class="fa-solid fa-cart-shopping text-3xl" style="color:var(--text-muted);"></i>
+      </div>
+      <h3 class="font-display text-xl font-bold mb-2" style="color:var(--text-primary);">Your grocery list is empty</h3>
+      <p class="text-sm" style="color:var(--text-muted);">Add recipes to your meal planner to generate a grocery list.</p>
+    </div>
+  </section>
+
+  <!-- FAVORITES VIEW -->
+  <section id="favoritesSection" class="view-section py-6">
+    <h2 class="font-display text-2xl font-bold mb-6" style="color:var(--text-primary);">Favorite Recipes</h2>
+    <div id="favoritesGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"></div>
+    <div id="favoritesEmpty" class="hidden text-center py-16">
+      <div class="w-24 h-24 rounded-full mx-auto mb-5 flex items-center justify-center" style="background:var(--empty-bg);">
+        <i class="fa-regular fa-heart text-3xl" style="color:var(--text-muted);"></i>
+      </div>
+      <h3 class="font-display text-xl font-bold mb-2" style="color:var(--text-primary);">No favorites yet</h3>
+      <p class="text-sm mb-6" style="color:var(--text-muted);">Browse recipes and tap the heart to save your favorites.</p>
+      <button onclick="switchView('recipes')" class="px-6 py-2.5 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90" style="background:var(--accent);">Browse Recipes</button>
+    </div>
+  </section>
+
+</main>
+
+<!-- ===== FEATURED CHEF ===== -->
+<section class="py-14" style="background:var(--bg-secondary);">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="max-w-3xl mx-auto reveal">
+      <div class="rounded-2xl border overflow-hidden" style="background:var(--bg-card);border-color:var(--border);">
+        <div class="grid md:grid-cols-[280px_1fr]">
+          <div class="h-64 md:h-auto">
+            <img src="https://picsum.photos/seed/chefportrait/560/480.jpg" alt="Chef" class="w-full h-full object-cover" loading="lazy">
+          </div>
+          <div class="p-6 md:p-8 flex flex-col justify-center">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold mb-4 self-start" style="background:var(--accent-light);color:var(--accent);">Featured Chef</div>
+            <h3 class="font-display text-2xl font-bold mb-2" style="color:var(--text-primary);">Elena Rodriguez</h3>
+            <p class="text-sm leading-relaxed mb-4" style="color:var(--text-secondary);">Award-winning home cook with 15 years of experience blending Mediterranean traditions with modern nutrition science. Passionate about making healthy eating accessible and delicious for everyone.</p>
+            <div class="flex items-center gap-4 mb-5">
+              <div class="flex items-center gap-1"><i class="fa-solid fa-star text-xs" style="color:#f59e0b;"></i><span class="text-sm font-semibold" style="color:var(--text-primary);">4.9</span></div>
+              <div class="text-sm" style="color:var(--text-muted);">|</div>
+              <div class="text-sm" style="color:var(--text-secondary);"><i class="fa-solid fa-utensils mr-1" style="color:var(--accent);"></i>42 Recipes</div>
+              <div class="text-sm" style="color:var(--text-muted);">|</div>
+              <div class="text-sm" style="color:var(--text-secondary);"><i class="fa-solid fa-users mr-1" style="color:var(--accent);"></i>12.4k Followers</div>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <span class="px-3 py-1 rounded-full text-xs font-medium" style="background:var(--tag-bg);color:var(--text-secondary);">Mediterranean</span>
+              <span class="px-3 py-1 rounded-full text-xs font-medium" style="background:var(--tag-bg);color:var(--text-secondary);">Healthy Living</span>
+              <span class="px-3 py-1 rounded-full text-xs font-medium" style="background:var(--tag-bg);color:var(--text-secondary);">Meal Prep</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== STATISTICS ===== -->
+<section class="py-14" style="background:var(--bg-primary);">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <h2 class="font-display text-2xl font-bold text-center mb-10 reveal" style="color:var(--text-primary);">Your Kitchen at a Glance</h2>
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 reveal">
+      <div class="text-center p-6 rounded-2xl border" style="background:var(--bg-card);border-color:var(--border);">
+        <div class="w-12 h-12 rounded-xl mx-auto mb-3 flex items-center justify-center" style="background:var(--accent-light);">
+          <i class="fa-solid fa-book-open" style="color:var(--accent);"></i>
+        </div>
+        <div class="text-3xl font-display font-bold mb-1 counter" data-target="12" style="color:var(--text-primary);">0</div>
+        <div class="text-xs font-medium" style="color:var(--text-muted);">Total Recipes</div>
+      </div>
+      <div class="text-center p-6 rounded-2xl border" style="background:var(--bg-card);border-color:var(--border);">
+        <div class="w-12 h-12 rounded-xl mx-auto mb-3 flex items-center justify-center" style="background:var(--accent-light);">
+          <i class="fa-solid fa-calendar-check" style="color:var(--accent);"></i>
+        </div>
+        <div class="text-3xl font-display font-bold mb-1 counter" data-target="0" id="statMeals" style="color:var(--text-primary);">0</div>
+        <div class="text-xs font-medium" style="color:var(--text-muted);">Meals Planned</div>
+      </div>
+      <div class="text-center p-6 rounded-2xl border" style="background:var(--bg-card);border-color:var(--border);">
+        <div class="w-12 h-12 rounded-xl mx-auto mb-3 flex items-center justify-center" style="background:var(--accent-light);">
+          <i class="fa-solid fa-cart-shopping" style="color:var(--accent);"></i>
+        </div>
+        <div class="text-3xl font-display font-bold mb-1 counter" data-target="0" id="statGrocery" style="color:var(--text-primary);">0</div>
+        <div class="text-xs font-medium" style="color:var(--text-muted);">Grocery Items</div>
+      </div>
+      <div class="text-center p-6 rounded-2xl border" style="background:var(--bg-card);border-color:var(--border);">
+        <div class="w-12 h-12 rounded-xl mx-auto mb-3 flex items-center justify-center" style="background:var(--accent-light);">
+          <i class="fa-solid fa-heart" style="color:var(--accent);"></i>
+        </div>
+        <div class="text-3xl font-display font-bold mb-1 counter" data-target="0" id="statFavorites" style="color:var(--text-primary);">0</div>
+        <div class="text-xs font-medium" style="color:var(--text-muted);">Favorite Recipes</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FOOTER ===== -->
+<footer class="py-10 border-t" style="background:var(--bg-secondary);border-color:var(--border);">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
+      <div>
+        <div class="flex items-center gap-2 mb-3">
+          <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:var(--accent);"><i class="fa-solid fa-utensils text-white text-xs"></i></div>
+          <span class="font-display font-bold" style="color:var(--text-primary);">MealPrep</span>
+        </div>
+        <p class="text-sm leading-relaxed" style="color:var(--text-muted);">Your all-in-one kitchen companion for organized meal planning and recipe management.</p>
+      </div>
+      <div>
+        <h4 class="font-semibold text-sm mb-3" style="color:var(--text-primary);">Explore</h4>
+        <ul class="space-y-2">
+          <li><a href="#" onclick="switchView('recipes');return false;" class="text-sm transition-colors hover:opacity-70" style="color:var(--text-muted);">All Recipes</a></li>
+          <li><a href="#" onclick="switchView('planner');return false;" class="text-sm transition-colors hover:opacity-70" style="color:var(--text-muted);">Meal Planner</a></li>
+          <li><a href="#" onclick="switchView('grocery');return false;" class="text-sm transition-colors hover:opacity-70" style="color:var(--text-muted);">Grocery List</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="font-semibold text-sm mb-3" style="color:var(--text-primary);">Categories</h4>
+        <ul class="space-y-2">
+          <li><a href="#" class="text-sm transition-colors hover:opacity-70" style="color:var(--text-muted);">Breakfast</a></li>
+          <li><a href="#" class="text-sm transition-colors hover:opacity-70" style="color:var(--text-muted);">Lunch</a></li>
+          <li><a href="#" class="text-sm transition-colors hover:opacity-70" style="color:var(--text-muted);">Dinner</a></li>
+          <li><a href="#" class="text-sm transition-colors hover:opacity-70" style="color:var(--text-muted);">Desserts</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="font-semibold text-sm mb-3" style="color:var(--text-primary);">Connect</h4>
+        <div class="flex gap-3">
+          <a href="#" class="w-9 h-9 rounded-lg border flex items-center justify-center transition-colors hover:opacity-70" style="border-color:var(--border);color:var(--text-muted);" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+          <a href="#" class="w-9 h-9 rounded-lg border flex items-center justify-center transition-colors hover:opacity-70" style="border-color:var(--border);color:var(--text-muted);" aria-label="Pinterest"><i class="fa-brands fa-pinterest-p"></i></a>
+          <a href="#" class="w-9 h-9 rounded-lg border flex items-center justify-center transition-colors hover:opacity-70" style="border-color:var(--border);color:var(--text-muted);" aria-label="YouTube"><i class="fa-brands fa-youtube"></i></a>
+        </div>
+      </div>
+    </div>
+    <div class="border-t pt-6 text-center text-xs" style="border-color:var(--border);color:var(--text-muted);">
+      Built with care. All recipes stored locally in your browser.
+    </div>
+  </div>
+</footer>
+
+<!-- ===== MOBILE BOTTOM NAV ===== -->
+<nav class="bottom-nav fixed bottom-0 left-0 right-0 z-50 border-t flex items-center justify-around h-16" style="background:var(--bg-nav);backdrop-filter:blur(16px);border-color:var(--border);">
+  <button onclick="switchView('recipes')" class="btm-link flex flex-col items-center gap-0.5 px-3 py-1" data-view="recipes" aria-label="Recipes">
+    <i class="fa-solid fa-compass text-base" style="color:var(--accent);"></i>
+    <span class="text-[10px] font-medium" style="color:var(--accent);">Recipes</span>
+  </button>
+  <button onclick="switchView('planner')" class="btm-link flex flex-col items-center gap-0.5 px-3 py-1" data-view="planner" aria-label="Planner">
+    <i class="fa-regular fa-calendar text-base" style="color:var(--text-muted);"></i>
+    <span class="text-[10px] font-medium" style="color:var(--text-muted);">Planner</span>
+  </button>
+  <button onclick="switchView('grocery')" class="btm-link flex flex-col items-center gap-0.5 px-3 py-1" data-view="grocery" aria-label="Grocery">
+    <i class="fa-solid fa-cart-shopping text-base" style="color:var(--text-muted);"></i>
+    <span class="text-[10px] font-medium" style="color:var(--text-muted);">Grocery</span>
+  </button>
+  <button onclick="switchView('favorites')" class="btm-link flex flex-col items-center gap-0.5 px-3 py-1" data-view="favorites" aria-label="Favorites">
+    <i class="fa-regular fa-heart text-base" style="color:var(--text-muted);"></i>
+    <span class="text-[10px] font-medium" style="color:var(--text-muted);">Favorites</span>
+  </button>
+</nav>
+
+<!-- ===== RECIPE MODAL ===== -->
+<div id="recipeModal" class="modal-backdrop hidden fixed inset-0 z-[70] flex items-start justify-center p-4 pt-8 md:pt-12 overflow-y-auto" style="background:var(--overlay);backdrop-filter:blur(6px);" onclick="if(event.target===this)closeRecipeModal()">
+  <div class="modal-content w-full max-w-3xl rounded-2xl overflow-hidden mb-8" style="background:var(--bg-card);box-shadow:0 25px 60px rgba(0,0,0,0.3);">
+    <!-- Modal Image -->
+    <div class="relative aspect-video overflow-hidden">
+      <img id="modalImage" src="" alt="" class="w-full h-full object-cover">
+      <button onclick="closeRecipeModal()" class="absolute top-3 right-3 w-9 h-9 rounded-full bg-black/50 backdrop-blur-sm text-white flex items-center justify-center hover:bg-black/70 transition-colors" aria-label="Close">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+      <button id="modalFavBtn" onclick="toggleModalFavorite()" class="absolute top-3 left-3 w-9 h-9 rounded-full bg-black/50 backdrop-blur-sm text-white flex items-center justify-center hover:bg-black/70 transition-colors" aria-label="Favorite">
+        <i class="fa-regular fa-heart"></i>
+      </button>
+    </div>
+    <!-- Modal Body -->
+    <div class="p-5 md:p-8">
+      <div id="modalTags" class="flex flex-wrap gap-2 mb-3"></div>
+      <h2 id="modalTitle" class="font-display text-2xl md:text-3xl font-bold mb-2" style="color:var(--text-primary);"></h2>
+      <p id="modalDesc" class="text-sm leading-relaxed mb-5" style="color:var(--text-secondary);"></p>
+      <!-- Meta Row -->
+      <div class="flex flex-wrap gap-4 mb-5">
+        <div class="flex items-center gap-1.5 text-sm" style="color:var(--text-secondary);"><i class="fa-regular fa-clock" style="color:var(--accent);"></i><span id="modalPrep"></span></div>
+        <div class="flex items-center gap-1.5 text-sm" style="color:var(--text-secondary);"><i class="fa-solid fa-fire-burner" style="color:var(--accent);"></i><span id="modalCook"></span></div>
+        <div class="flex items-center gap-1.5 text-sm" style="color:var(--text-secondary);"><i class="fa-solid fa-gauge" style="color:var(--accent);"></i><span id="modalDiff"></span></div>
+        <div class="flex items-center gap-1.5 text-sm" style="color:var(--text-secondary);"><i class="fa-solid fa-star" style="color:#f59e0b;"></i><span id="modalRating"></span></div>
+      </div>
+      <!-- Nutrition -->
+      <div class="grid grid-cols-5 gap-2 mb-6">
+        <div class="text-center p-3 rounded-xl" style="background:var(--bg-secondary);">
+          <div class="text-xs mb-1" style="color:var(--text-muted);">Calories</div>
+          <div id="nutCal" class="text-sm font-bold" style="color:var(--text-primary);"></div>
+          <div class="w-full h-1 rounded-full mt-1.5" style="background:var(--progress-bg);"><div id="barCal" class="h-full rounded-full" style="background:var(--accent);"></div></div>
+        </div>
+        <div class="text-center p-3 rounded-xl" style="background:var(--bg-secondary);">
+          <div class="text-xs mb-1" style="color:var(--text-muted);">Protein</div>
+          <div id="nutPro" class="text-sm font-bold" style="color:var(--text-primary);"></div>
+          <div class="w-full h-1 rounded-full mt-1.5" style="background:var(--progress-bg);"><div id="barPro" class="h-full rounded-full" style="background:var(--accent);"></div></div>
+        </div>
+        <div class="text-center p-3 rounded-xl" style="background:var(--bg-secondary);">
+          <div class="text-xs mb-1" style="color:var(--text-muted);">Carbs</div>
+          <div id="nutCarb" class="text-sm font-bold" style="color:var(--text-primary);"></div>
+          <div class="w-full h-1 rounded-full mt-1.5" style="background:var(--progress-bg);"><div id="barCarb" class="h-full rounded-full" style="background:var(--accent);"></div></div>
+        </div>
+        <div class="text-center p-3 rounded-xl" style="background:var(--bg-secondary);">
+          <div class="text-xs mb-1" style="color:var(--text-muted);">Fat</div>
+          <div id="nutFat" class="text-sm font-bold" style="color:var(--text-primary);"></div>
+          <div class="w-full h-1 rounded-full mt-1.5" style="background:var(--progress-bg);"><div id="barFat" class="h-full rounded-full" style="background:var(--accent);"></div></div>
+        </div>
+        <div class="text-center p-3 rounded-xl" style="background:var(--bg-secondary);">
+          <div class="text-xs mb-1" style="color:var(--text-muted);">Fiber</div>
+          <div id="nutFib" class="text-sm font-bold" style="color:var(--text-primary);"></div>
+          <div class="w-full h-1 rounded-full mt-1.5" style="background:var(--progress-bg);"><div id="barFib" class="h-full rounded-full" style="background:var(--accent);"></div></div>
+        </div>
+      </div>
+      <!-- Servings Calculator -->
+      <div class="flex items-center gap-4 mb-6 p-4 rounded-xl border" style="border-color:var(--border);background:var(--bg-secondary);">
+        <span class="text-sm font-medium" style="color:var(--text-secondary);">Servings:</span>
+        <div class="flex items-center gap-3">
+          <button onclick="adjustServings(-1)" class="w-8 h-8 rounded-lg border flex items-center justify-center transition-colors hover:opacity-80" style="border-color:var(--border);color:var(--text-primary);background:var(--bg-card);" aria-label="Decrease servings"><i class="fa-solid fa-minus text-xs"></i></button>
+          <span id="modalServings" class="text-lg font-bold w-8 text-center" style="color:var(--text-primary);"></span>
+          <button onclick="adjustServings(1)" class="w-8 h-8 rounded-lg border flex items-center justify-center transition-colors hover:opacity-80" style="border-color:var(--border);color:var(--text-primary);background:var(--bg-card);" aria-label="Increase servings"><i class="fa-solid fa-plus text-xs"></i></button>
+        </div>
+        <button onclick="addToPlannerFromModal()" class="ml-auto px-4 py-2 rounded-lg text-sm font-semibold text-white transition-all hover:opacity-90" style="background:var(--accent);">
+          <i class="fa-solid fa-plus mr-1"></i>Add to Planner
+        </button>
+      </div>
+      <!-- Ingredients -->
+      <h3 class="font-display text-lg font-bold mb-3" style="color:var(--text-primary);">Ingredients</h3>
+      <div id="modalIngredients" class="space-y-2 mb-6"></div>
+      <!-- Instructions -->
+      <h3 class="font-display text-lg font-bold mb-3" style="color:var(--text-primary);">Instructions</h3>
+      <ol id="modalInstructions" class="space-y-3"></ol>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ADD MEAL TO PLANNER MODAL ===== -->
+<div id="addMealModal" class="modal-backdrop hidden fixed inset-0 z-[80] flex items-center justify-center p-4" style="background:var(--overlay);backdrop-filter:blur(6px);" onclick="if(event.target===this)closeAddMealModal()">
+  <div class="modal-content w-full max-w-md max-h-[80vh] rounded-2xl overflow-hidden flex flex-col" style="background:var(--bg-card);box-shadow:0 25px 60px rgba(0,0,0,0.3);">
+    <div class="p-5 border-b flex items-center justify-between flex-shrink-0" style="border-color:var(--border);">
+      <h3 class="font-display text-lg font-bold" style="color:var(--text-primary);">Choose a Recipe</h3>
+      <button onclick="closeAddMealModal()" class="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:opacity-70" style="color:var(--text-muted);" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="p-3 overflow-y-auto flex-1">
+      <input id="addMealSearch" type="text" placeholder="Search..." class="w-full px-4 py-2.5 rounded-xl text-sm border mb-3 focus:outline-none focus:ring-2" style="background:var(--bg-input);border-color:var(--border);color:var(--text-primary);--tw-ring-color:rgba(var(--accent-rgb),0.3);" oninput="filterAddMealOptions(this.value)">
+      <div id="addMealOptions" class="space-y-2"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== FLOATING ACTION BUTTON (Mobile) ===== -->
+<button id="fabBtn" onclick="window.scrollTo({top:0,behavior:'smooth'})" class="fixed bottom-20 right-4 z-40 w-12 h-12 rounded-full shadow-lg flex items-center justify-center text-white transition-all hover:scale-110 md:hidden" style="background:var(--accent);display:none;" aria-label="Scroll to top">
+  <i class="fa-solid fa-arrow-up"></i>
+</button>
+
+<script>
+/* ===== RECIPE DATA ===== */
+const recipes = [
+  {
+    id:1, name:"Avocado Toast with Poached Eggs",
+    image:"https://picsum.photos/seed/avotoast22/600/400.jpg",
+    category:"Breakfast", tags:["Vegetarian","Quick","Healthy"],
+    prepTime:10, cookTime:5, difficulty:"Easy", calories:350,
+    protein:15, carbs:28, fat:22, fiber:8, rating:4.8, defaultServings:2,
+    description:"Creamy avocado spread on crispy sourdough, topped with perfectly poached eggs and cherry tomatoes.",
+    ingredients:[
+      {name:"Sourdough bread",amount:2,unit:"slices"},
+      {name:"Ripe avocado",amount:1,unit:"whole"},
+      {name:"Eggs",amount:2,unit:"large"},
+      {name:"Cherry tomatoes",amount:6,unit:"pieces"},
+      {name:"Lemon juice",amount:1,unit:"tbsp"},
+      {name:"Red pepper flakes",amount:0.25,unit:"tsp"},
+      {name:"Everything bagel seasoning",amount:1,unit:"tsp"}
+    ],
+    instructions:[
+      "Toast the sourdough bread until golden and crispy.",
+      "Mash the avocado with lemon juice, salt, and pepper.",
+      "Bring a pot of water to a gentle simmer, add a splash of vinegar.",
+      "Create a vortex and carefully drop in the eggs, poach for 3-4 minutes.",
+      "Spread the mashed avocado on each toast slice.",
+      "Top with poached eggs, halved cherry tomatoes, and red pepper flakes.",
+      "Finish with everything bagel seasoning and serve immediately."
+    ]
+  },
+  {
+    id:2, name:"Greek Yogurt Parfait",
+    image:"https://picsum.photos/seed/yogurtparfait/600/400.jpg",
+    category:"Breakfast", tags:["Vegetarian","Quick","Healthy"],
+    prepTime:5, cookTime:0, difficulty:"Easy", calories:280,
+    protein:18, carbs:38, fat:6, fiber:4, rating:4.5, defaultServings:1,
+    description:"Layers of creamy Greek yogurt, fresh berries, honey, and crunchy granola for a quick morning boost.",
+    ingredients:[
+      {name:"Greek yogurt",amount:200,unit:"g"},
+      {name:"Mixed berries",amount:100,unit:"g"},
+      {name:"Granola",amount:40,unit:"g"},
+      {name:"Honey",amount:1,unit:"tbsp"},
+      {name:"Chia seeds",amount:1,unit:"tsp"}
+    ],
+    instructions:[
+      "Spoon half the yogurt into a glass or bowl.",
+      "Add a layer of mixed berries.",
+      "Add another layer of yogurt.",
+      "Top with remaining berries, granola, and chia seeds.",
+      "Drizzle with honey and serve immediately."
+    ]
+  },
+  {
+    id:3, name:"Mediterranean Quinoa Bowl",
+    image:"https://picsum.photos/seed/quinoabowl7/600/400.jpg",
+    category:"Lunch", tags:["Vegetarian","Healthy","Gluten Free"],
+    prepTime:15, cookTime:20, difficulty:"Easy", calories:420,
+    protein:14, carbs:52, fat:18, fiber:9, rating:4.7, defaultServings:2,
+    description:"A vibrant bowl of fluffy quinoa loaded with roasted vegetables, feta, olives, and a lemon-herb dressing.",
+    ingredients:[
+      {name:"Quinoa",amount:1,unit:"cup"},
+      {name:"Cherry tomatoes",amount:1,unit:"cup"},
+      {name:"Cucumber",amount:1,unit:"whole"},
+      {name:"Feta cheese",amount:100,unit:"g"},
+      {name:"Kalamata olives",amount:0.5,unit:"cup"},
+      {name:"Red onion",amount:0.5,unit:"whole"},
+      {name:"Olive oil",amount:3,unit:"tbsp"},
+      {name:"Lemon juice",amount:2,unit:"tbsp"},
+      {name:"Fresh parsley",amount:0.25,unit:"cup"}
+    ],
+    instructions:[
+      "Rinse quinoa and cook in 2 cups of water for 15-20 minutes until fluffy.",
+      "Dice the cucumber, halve the tomatoes, and slice the red onion thinly.",
+      "Combine olive oil, lemon juice, salt, pepper, and chopped parsley for the dressing.",
+      "Divide quinoa into bowls and arrange vegetables on top.",
+      "Crumble feta cheese and scatter olives over each bowl.",
+      "Drizzle with the lemon-herb dressing and serve."
+    ]
+  },
+  {
+    id:4, name:"Grilled Chicken Caesar Salad",
+    image:"https://picsum.photos/seed/caesarsalad9/600/400.jpg",
+    category:"Lunch", tags:["High Protein","Quick","Low Carb"],
+    prepTime:10, cookTime:12, difficulty:"Easy", calories:380,
+    protein:35, carbs:12, fat:22, fiber:4, rating:4.6, defaultServings:2,
+    description:"Tender grilled chicken over crisp romaine with homemade Caesar dressing and crunchy croutons.",
+    ingredients:[
+      {name:"Chicken breast",amount:400,unit:"g"},
+      {name:"Romaine lettuce",amount:1,unit:"head"},
+      {name:"Parmesan cheese",amount:50,unit:"g"},
+      {name:"Croutons",amount:1,unit:"cup"},
+      {name:"Caesar dressing",amount:4,unit:"tbsp"},
+      {name:"Lemon juice",amount:1,unit:"tbsp"},
+      {name:"Garlic powder",amount:0.5,unit:"tsp"},
+      {name:"Olive oil",amount:1,unit:"tbsp"}
+    ],
+    instructions:[
+      "Season chicken breasts with garlic powder, salt, pepper, and a drizzle of olive oil.",
+      "Grill chicken over medium-high heat for 5-6 minutes per side until cooked through.",
+      "Let chicken rest for 5 minutes, then slice thinly.",
+      "Wash and chop the romaine lettuce.",
+      "Arrange lettuce on plates, top with sliced chicken and croutons.",
+      "Drizzle with Caesar dressing, sprinkle with shaved parmesan, and serve."
+    ]
+  },
+  {
+    id:5, name:"Pan-Seared Salmon with Asparagus",
+    image:"https://picsum.photos/seed/salmonasparagus/600/400.jpg",
+    category:"Dinner", tags:["High Protein","Healthy","Gluten Free"],
+    prepTime:10, cookTime:15, difficulty:"Medium", calories:480,
+    protein:42, carbs:8, fat:30, fiber:4, rating:4.9, defaultServings:2,
+    description:"Perfectly crispy-skinned salmon fillets served with tender asparagus and a bright lemon-butter sauce.",
+    ingredients:[
+      {name:"Salmon fillets",amount:2,unit:"pieces (170g each)"},
+      {name:"Asparagus",amount:1,unit:"bunch"},
+      {name:"Butter",amount:2,unit:"tbsp"},
+      {name:"Lemon",amount:1,unit:"whole"},
+      {name:"Garlic",amount:3,unit:"cloves"},
+      {name:"Olive oil",amount:1,unit:"tbsp"},
+      {name:"Fresh dill",amount:2,unit:"tbsp"}
+    ],
+    instructions:[
+      "Pat salmon fillets dry and season generously with salt and pepper.",
+      "Heat olive oil in a skillet over medium-high heat until shimmering.",
+      "Place salmon skin-side down and cook for 4 minutes without moving.",
+      "Flip and cook for another 3-4 minutes until desired doneness.",
+      "In the same pan, add butter, minced garlic, and asparagus. Cook 4-5 minutes.",
+      "Squeeze lemon juice over everything, garnish with fresh dill, and serve."
+    ]
+  },
+  {
+    id:6, name:"Beef Stir-Fry with Vegetables",
+    image:"https://picsum.photos/seed/beefstirfry/600/400.jpg",
+    category:"Dinner", tags:["High Protein","Quick"],
+    prepTime:15, cookTime:10, difficulty:"Medium", calories:450,
+    protein:38, carbs:22, fat:24, fiber:5, rating:4.7, defaultServings:3,
+    description:"Tender strips of beef tossed with crisp vegetables in a savory soy-ginger sauce over steamed rice.",
+    ingredients:[
+      {name:"Beef sirloin",amount:500,unit:"g"},
+      {name:"Bell peppers",amount:2,unit:"whole"},
+      {name:"Broccoli florets",amount:2,unit:"cups"},
+      {name:"Soy sauce",amount:3,unit:"tbsp"},
+      {name:"Rice vinegar",amount:1,unit:"tbsp"},
+      {name:"Fresh ginger",amount:1,unit:"tbsp grated"},
+      {name:"Garlic",amount:3,unit:"cloves"},
+      {name:"Sesame oil",amount:1,unit:"tbsp"},
+      {name:"Cornstarch",amount:1,unit:"tbsp"},
+      {name:"Cooked rice",amount:3,unit:"cups"}
+    ],
+    instructions:[
+      "Slice beef into thin strips against the grain. Toss with soy sauce and cornstarch.",
+      "Slice bell peppers into strips and cut broccoli into small florets.",
+      "Heat sesame oil in a wok over high heat until smoking.",
+      "Stir-fry beef for 2-3 minutes until browned, then remove and set aside.",
+      "Add ginger, garlic, and vegetables. Stir-fry for 3-4 minutes.",
+      "Return beef to wok, add remaining sauce, toss to combine. Serve over rice."
+    ]
+  },
+  {
+    id:7, name:"Hearty Lentil Soup",
+    image:"https://picsum.photos/seed/lentilsoup3/600/400.jpg",
+    category:"Dinner", tags:["Vegan","Healthy","High Protein"],
+    prepTime:10, cookTime:35, difficulty:"Easy", calories:320,
+    protein:22, carbs:45, fat:4, fiber:16, rating:4.6, defaultServings:4,
+    description:"A warming, protein-packed lentil soup with carrots, celery, and aromatic spices. Perfect for meal prep.",
+    ingredients:[
+      {name:"Red lentils",amount:1.5,unit:"cups"},
+      {name:"Carrots",amount:2,unit:"whole"},
+      {name:"Celery stalks",amount:2,unit:"whole"},
+      {name:"Onion",amount:1,unit:"large"},
+      {name:"Garlic",amount:4,unit:"cloves"},
+      {name:"Cumin",amount:1,unit:"tsp"},
+      {name:"Turmeric",amount:0.5,unit:"tsp"},
+      {name:"Vegetable broth",amount:6,unit:"cups"},
+      {name:"Olive oil",amount:2,unit:"tbsp"},
+      {name:"Fresh lemon juice",amount:2,unit:"tbsp"}
+    ],
+    instructions:[
+      "Dice the onion, carrots, and celery. Mince the garlic.",
+      "Heat olive oil in a large pot over medium heat. Saute onion for 3 minutes.",
+      "Add garlic, carrots, and celery. Cook for 5 minutes until softened.",
+      "Add cumin and turmeric, stir for 30 seconds until fragrant.",
+      "Add lentils and vegetable broth. Bring to a boil, then reduce to a simmer.",
+      "Cook for 25-30 minutes until lentils are tender. Season with salt and pepper.",
+      "Stir in lemon juice before serving. Garnish with fresh parsley if desired."
+    ]
+  },
+  {
+    id:8, name:"Banana Oat Muffins",
+    image:"https://picsum.photos/seed/bananamuffin5/600/400.jpg",
+    category:"Snacks", tags:["Vegetarian","Healthy"],
+    prepTime:15, cookTime:22, difficulty:"Easy", calories:180,
+    protein:5, carbs:30, fat:5, fiber:3, rating:4.4, defaultServings:12,
+    description:"Naturally sweetened muffins made with ripe bananas, oats, and a touch of cinnamon. Great for meal prep.",
+    ingredients:[
+      {name:"Ripe bananas",amount:3,unit:"whole"},
+      {name:"Rolled oats",amount:2,unit:"cups"},
+      {name:"Eggs",amount:2,unit:"large"},
+      {name:"Honey",amount:3,unit:"tbsp"},
+      {name:"Greek yogurt",amount:0.5,unit:"cup"},
+      {name:"Baking powder",amount:1,unit:"tsp"},
+      {name:"Cinnamon",amount:1,unit:"tsp"},
+      {name:"Vanilla extract",amount:1,unit:"tsp"}
+    ],
+    instructions:[
+      "Preheat oven to 350F (175C). Line a muffin tin with paper liners.",
+      "Mash bananas in a large bowl until smooth.",
+      "Add eggs, honey, yogurt, and vanilla. Mix well.",
+      "Stir in oats, baking powder, and cinnamon until just combined.",
+      "Divide batter evenly among muffin cups, filling about 3/4 full.",
+      "Bake for 20-22 minutes until a toothpick comes out clean.",
+      "Cool in the tin for 5 minutes, then transfer to a wire rack."
+    ]
+  },
+  {
+    id:9, name:"Chocolate Avocado Mousse",
+    image:"https://picsum.photos/seed/chocmousse4/600/400.jpg",
+    category:"Desserts", tags:["Vegan","Gluten Free","Dessert"],
+    prepTime:10, cookTime:0, difficulty:"Easy", calories:240,
+    protein:4, carbs:20, fat:16, fiber:6, rating:4.5, defaultServings:4,
+    description:"A rich, silky chocolate mousse made with avocado and cocoa powder. No one will guess the secret ingredient.",
+    ingredients:[
+      {name:"Ripe avocado",amount:2,unit:"whole"},
+      {name:"Cocoa powder",amount:0.33,unit:"cup"},
+      {name:"Maple syrup",amount:3,unit:"tbsp"},
+      {name:"Vanilla extract",amount:1,unit:"tsp"},
+      {name:"Coconut milk",amount:2,unit:"tbsp"},
+      {name:"Sea salt",amount:1,unit:"pinch"}
+    ],
+    instructions:[
+      "Halve and pit the avocados, scoop the flesh into a food processor.",
+      "Add cocoa powder, maple syrup, vanilla extract, coconut milk, and salt.",
+      "Blend until completely smooth and creamy, scraping sides as needed.",
+      "Taste and adjust sweetness if needed.",
+      "Divide into 4 serving glasses or ramekins.",
+      "Refrigerate for at least 1 hour before serving. Top with cocoa powder or berries."
+    ]
+  },
+  {
+    id:10, name:"Berry Smoothie Bowl",
+    image:"https://picsum.photos/seed/smoothiebowl8/600/400.jpg",
+    category:"Breakfast", tags:["Vegan","Healthy","Quick","Gluten Free"],
+    prepTime:5, cookTime:0, difficulty:"Easy", calories:310,
+    protein:8, carbs:55, fat:8, fiber:9, rating:4.7, defaultServings:1,
+    description:"A thick, vibrant smoothie bowl topped with fresh fruit, coconut flakes, and a drizzle of nut butter.",
+    ingredients:[
+      {name:"Frozen mixed berries",amount:200,unit:"g"},
+      {name:"Frozen banana",amount:1,unit:"whole"},
+      {name:"Almond milk",amount:0.5,unit:"cup"},
+      {name:"Fresh strawberries",amount:3,unit:"whole"},
+      {name:"Blueberries",amount:0.25,unit:"cup"},
+      {name:"Coconut flakes",amount:2,unit:"tbsp"},
+      {name:"Almond butter",amount:1,unit:"tbsp"},
+      {name:"Chia seeds",amount:1,unit:"tsp"}
+    ],
+    instructions:[
+      "Blend frozen berries, frozen banana, and almond milk until thick and smooth.",
+      "Pour into a bowl — the consistency should be thicker than a regular smoothie.",
+      "Slice fresh strawberries and arrange on top with blueberries.",
+      "Sprinkle with coconut flakes and chia seeds.",
+      "Add a dollop of almond butter and serve immediately."
+    ]
+  },
+  {
+    id:11, name:"Chicken Tikka Masala",
+    image:"https://picsum.photos/seed/tikkamasala6/600/400.jpg",
+    category:"Dinner", tags:["High Protein","Gluten Free"],
+    prepTime:20, cookTime:30, difficulty:"Medium", calories:520,
+    protein:40, carbs:28, fat:28, fiber:5, rating:4.9, defaultServings:4,
+    description:"Tender marinated chicken in a rich, creamy tomato-based sauce with warm Indian spices. Serve with basmati rice.",
+    ingredients:[
+      {name:"Chicken thighs",amount:600,unit:"g"},
+      {name:"Yogurt",amount:0.5,unit:"cup"},
+      {name:"Crushed tomatoes",amount:1,unit:"can (400g)"},
+      {name:"Heavy cream",amount:0.5,unit:"cup"},
+      {name:"Onion",amount:1,unit:"large"},
+      {name:"Garlic",amount:4,unit:"cloves"},
+      {name:"Garam masala",amount:2,unit:"tsp"},
+      {name:"Turmeric",amount:1,unit:"tsp"},
+      {name:"Cumin",amount:1,unit:"tsp"},
+      {name:"Paprika",amount:1,unit:"tsp"},
+      {name:"Ginger",amount:1,unit:"tbsp grated"},
+      {name:"Basmati rice",amount:2,unit:"cups"}
+    ],
+    instructions:[
+      "Cut chicken into bite-sized pieces. Marinate in yogurt, turmeric, and half the garam masala for 30 minutes.",
+      "Dice the onion. Mince garlic and grate ginger.",
+      "Heat oil in a large pan. Cook marinated chicken until browned on all sides. Remove and set aside.",
+      "In the same pan, saute onion until golden. Add garlic, ginger, and remaining spices. Cook 1 minute.",
+      "Add crushed tomatoes and simmer for 10 minutes until thickened.",
+      "Stir in heavy cream, return chicken to the sauce, and simmer for 10 more minutes.",
+      "Serve over cooked basmati rice, garnished with fresh cilantro."
+    ]
+  },
+  {
+    id:12, name:"Caprese Salad with Balsamic",
+    image:"https://picsum.photos/seed/capresesalad2/600/400.jpg",
+    category:"Lunch", tags:["Vegetarian","Quick","Gluten Free","Low Carb"],
+    prepTime:8, cookTime:0, difficulty:"Easy", calories:260,
+    protein:16, carbs:6, fat:20, fiber:2, rating:4.6, defaultServings:2,
+    description:"Classic Italian caprese with ripe tomatoes, fresh mozzarella, basil, and a sweet balsamic glaze.",
+    ingredients:[
+      {name:"Fresh mozzarella",amount:200,unit:"g"},
+      {name:"Ripe tomatoes",amount:2,unit:"large"},
+      {name:"Fresh basil leaves",amount:12,unit:"leaves"},
+      {name:"Extra virgin olive oil",amount:2,unit:"tbsp"},
+      {name:"Balsamic glaze",amount:1,unit:"tbsp"},
+      {name:"Salt and pepper",amount:0,unit:"to taste"}
+    ],
+    instructions:[
+      "Slice mozzarella and tomatoes into even rounds, about 1/4 inch thick.",
+      "Arrange alternating slices of tomato and mozzarella on a serving plate.",
+      "Tuck fresh basil leaves between the slices.",
+      "Drizzle generously with extra virgin olive oil.",
+      "Finish with balsamic glaze in a zigzag pattern.",
+      "Season with salt and freshly cracked black pepper. Serve immediately."
+    ]
+  }
+];
+
+/* ===== COLLECTIONS DATA ===== */
+const collections = [
+  { name:"Quick Weeknight Meals", filter: r => r.tags.includes("Quick"), image:"https://picsum.photos/seed/collquick/400/280.jpg" },
+  { name:"Healthy Choices", filter: r => r.tags.includes("Healthy"), image:"https://picsum.photos/seed/collhealthy/400/280.jpg" },
+  { name:"High Protein Meals", filter: r => r.tags.includes("High Protein"), image:"https://picsum.photos/seed/collprotein/400/280.jpg" },
+  { name:"Traditional Recipes", filter: r => [5,7,11].includes(r.id), image:"https://picsum.photos/seed/colltraditional/400/280.jpg" },
+  { name:"Desserts Collection", filter: r => r.category === "Desserts", image:"https://picsum.photos/seed/colldessert/400/280.jpg" },
+  { name:"Vegan Favorites", filter: r => r.tags.includes("Vegan"), image:"https://picsum.photos/seed/collvegan/400/280.jpg" }
+];
+
+/* ===== FILTER OPTIONS ===== */
+const filterOptions = ["All","Vegan","Vegetarian","Quick","Healthy","Dessert","High Protein","Low Carb","Gluten Free","Breakfast","Dinner","Lunch","Snacks"];
+
+/* ===== DAYS & MEALS ===== */
+const days = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
+const dayShort = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+const mealTypes = ["Breakfast","Lunch","Dinner"];
+
+/* ===== APPLICATION STATE ===== */
+const state = {
+  currentView: 'recipes',
+  currentTheme: localStorage.getItem('mealprep-theme') || 'fresh-kitchen',
+  favorites: JSON.parse(localStorage.getItem('mealprep-favorites') || '[]'),
+  mealPlan: JSON.parse(localStorage.getItem('mealprep-mealplan') || '{}'),
+  groceryChecked: JSON.parse(localStorage.getItem('mealprep-grocery') || '{}'),
+  activeFilters: [],
+  searchQuery: '',
+  currentModalRecipe: null,
+  currentServings: {},
+  addMealTarget: null, // {day, meal}
+  groceryItems: []
+};
+
+/* ===== THEME MANAGEMENT ===== */
+function setTheme(theme) {
+  state.currentTheme = theme;
+  document.documentElement.setAttribute('data-theme', theme);
+  localStorage.setItem('mealprep-theme', theme);
+  document.body.classList.add('theme-transition');
+  setTimeout(() => document.body.classList.remove('theme-transition'), 500);
+  toggleThemeDropdown(true);
+  showToast('Theme updated', 'success');
+}
+
+function toggleThemeDropdown(forceClose) {
+  const dd = document.getElementById('themeDropdown');
+  if (forceClose || !dd.classList.contains('hidden')) { dd.classList.add('hidden'); }
+  else { dd.classList.remove('hidden'); }
+}
+
+/* Close dropdown on outside click */
+document.addEventListener('click', (e) => {
+  const dd = document.getElementById('themeDropdown');
+  const btn = document.getElementById('themeBtn');
+  if (!dd.contains(e.target) && !btn.contains(e.target)) { dd.classList.add('hidden'); }
+});
+
+/* ===== VIEW SWITCHING ===== */
+function switchView(view) {
+  state.currentView = view;
+  document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
+  const sectionMap = { recipes:'recipesSection', planner:'plannerSection', grocery:'grocerySection', favorites:'favoritesSection' };
+  const el = document.getElementById(sectionMap[view]);
+  if (el) el.classList.add('active');
+
+  // Update desktop nav
+  document.querySelectorAll('.nav-link').forEach(l => {
+    l.classList.remove('active');
+    l.style.color = 'var(--text-secondary)';
+    if (l.dataset.view === view) { l.classList.add('active'); l.style.color = 'var(--accent)'; }
+  });
+  // Update mobile nav
+  document.querySelectorAll('.btm-link').forEach(l => {
+    const icon = l.querySelector('i');
+    const span = l.querySelector('span');
+    if (l.dataset.view === view) { icon.style.color = 'var(--accent)'; span.style.color = 'var(--accent)'; }
+    else { icon.style.color = 'var(--text-muted)'; span.style.color = 'var(--text-muted)'; }
+  });
+
+  // Show/hide hero & collections
+  const hero = document.getElementById('heroSection');
+  const coll = document.querySelector('.scroll-x')?.parentElement?.parentElement;
+  if (view === 'recipes') { hero.style.display = ''; if(coll) coll.style.display = ''; }
+  else { hero.style.display = 'none'; if(coll) coll.style.display = 'none'; }
+
+  // Render view content
+  if (view === 'planner') renderPlanner();
+  if (view === 'grocery') generateGroceryList();
+  if (view === 'favorites') renderFavorites();
+  if (view === 'recipes') renderRecipeGrid();
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* ===== TOAST NOTIFICATIONS ===== */
+function showToast(message, type = 'info') {
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  const iconMap = { success:'fa-circle-check', error:'fa-circle-xmark', info:'fa-circle-info' };
+  const colorMap = { success:'var(--accent)', error:'#ef4444', info:'var(--accent)' };
+  toast.className = 'toast-in pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg border text-sm font-medium';
+  toast.style.cssText = `background:var(--bg-card);border-color:var(--border);color:var(--text-primary);min-width:220px;`;
+  toast.innerHTML = `<i class="fa-solid ${iconMap[type]}" style="color:${colorMap[type]};"></i><span>${message}</span>`;
+  container.appendChild(toast);
+  setTimeout(() => { toast.className = toast.className.replace('toast-in', 'toast-out'); setTimeout(() => toast.remove(), 300); }, 2500);
+}
+
+/* ===== RENDER COLLECTIONS ===== */
+function renderCollections() {
+  const row = document.getElementById('collectionsRow');
+  row.innerHTML = collections.map(c => {
+    const count = recipes.filter(c.filter).length;
+    return `<div class="flex-shrink-0 w-64 sm:w-72 group cursor-pointer" onclick="applyCollectionFilter('${c.name}')">
+      <div class="relative rounded-2xl overflow-hidden aspect-[4/3]">
+        <img src="${c.image}" alt="${c.name}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" loading="lazy">
+        <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
+        <div class="absolute bottom-0 left-0 right-0 p-4">
+          <h3 class="font-display text-white font-bold text-lg leading-tight">${c.name}</h3>
+          <p class="text-white/70 text-xs mt-1">${count} recipe${count!==1?'s':''}</p>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function applyCollectionFilter(name) {
+  switchView('recipes');
+  const coll = collections.find(c => c.name === name);
+  if (!coll) return;
+  state.activeFilters = [];
+  // Determine which filter tags match
+  if (name.includes("Quick")) state.activeFilters.push("Quick");
+  else if (name.includes("Healthy")) state.activeFilters.push("Healthy");
+  else if (name.includes("Protein")) state.activeFilters.push("High Protein");
+  else if (name.includes("Dessert")) state.activeFilters.push("Dessert");
+  else if (name.includes("Vegan")) state.activeFilters.push("Vegan");
+  else if (name.includes("Traditional")) { /* show all as fallback */ }
+  renderFilters();
+  renderRecipeGrid();
+  document.getElementById('recipesSection').scrollIntoView({ behavior: 'smooth' });
+}
+
+/* ===== RENDER FILTERS ===== */
+function renderFilters() {
+  const bar = document.getElementById('filterBar');
+  bar.innerHTML = filterOptions.map(f => {
+    const active = state.activeFilters.includes(f);
+    return `<button class="filter-pill px-4 py-1.5 rounded-full text-xs font-semibold border ${active?'active':''}" 
+      style="border-color:var(--border);color:var(--text-secondary);background:var(--tag-bg);"
+      onclick="toggleFilter('${f}')">${f}</button>`;
+  }).join('');
+}
+
+function toggleFilter(filter) {
+  if (filter === 'All') { state.activeFilters = []; }
+  else {
+    const idx = state.activeFilters.indexOf(filter);
+    if (idx > -1) state.activeFilters.splice(idx, 1);
+    else state.activeFilters.push(filter);
+  }
+  renderFilters();
+  renderRecipeGrid();
+}
+
+/* ===== SEARCH ===== */
+function handleSearch(query) {
+  state.searchQuery = query.toLowerCase().trim();
+  if (state.currentView !== 'recipes') switchView('recipes');
+  else renderRecipeGrid();
+  renderSearchSuggestions(query);
+}
+
+function renderSearchSuggestions(query) {
+  const box = document.getElementById('searchSuggestions');
+  if (!query || !query.trim()) { box.classList.add('hidden'); return; }
+  const q = query.toLowerCase().trim();
+  const matches = recipes.filter(r =>
+    r.name.toLowerCase().includes(q) ||
+    r.category.toLowerCase().includes(q) ||
+    r.tags.some(t => t.toLowerCase().includes(q)) ||
+    r.ingredients.some(i => i.name.toLowerCase().includes(q))
+  ).slice(0, 5);
+  if (!matches.length) {
+    box.innerHTML = `<div class="p-4 text-center text-sm" style="color:var(--text-muted);">No recipes found</div>`;
+    box.classList.remove('hidden');
+    return;
+  }
+  box.innerHTML = matches.map(r => `
+    <button class="w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors hover:opacity-80" style="color:var(--text-primary);" onclick="openRecipeModal(${r.id});hideSuggestions();">
+      <img src="${r.image}" class="w-10 h-10 rounded-lg object-cover flex-shrink-0" alt="">
+      <div class="min-w-0">
+        <div class="text-sm font-medium truncate">${r.name}</div>
+        <div class="text-xs" style="color:var(--text-muted);">${r.category} &middot; ${r.prepTime + r.cookTime} min</div>
+      </div>
+    </button>
+  `).join('');
+  box.classList.remove('hidden');
+}
+
+function showSuggestions() { if (state.searchQuery) renderSearchSuggestions(state.searchQuery); }
+function hideSuggestions() { document.getElementById('searchSuggestions').classList.add('hidden'); }
+
+/* ===== RENDER RECIPE GRID ===== */
+function renderRecipeGrid() {
+  const grid = document.getElementById('recipeGrid');
+  const empty = document.getElementById('recipesEmpty');
+  let filtered = [...recipes];
+
+  // Apply filters
+  if (state.activeFilters.length > 0) {
+    filtered = filtered.filter(r => state.activeFilters.some(f => r.tags.includes(f) || r.category === f));
+  }
+
+  // Apply search
+  if (state.searchQuery) {
+    filtered = filtered.filter(r =>
+      r.name.toLowerCase().includes(state.searchQuery) ||
+      r.category.toLowerCase().includes(state.searchQuery) ||
+      r.tags.some(t => t.toLowerCase().includes(state.searchQuery)) ||
+      r.ingredients.some(i => i.name.toLowerCase().includes(state.searchQuery))
+    );
+  }
+
+  if (!filtered.length) {
+    grid.innerHTML = '';
+    empty.classList.remove('hidden');
+    return;
+  }
+  empty.classList.add('hidden');
+
+  grid.innerHTML = filtered.map((r, i) => {
+    const isFav = state.favorites.includes(r.id);
+    const stars = '&#9733;'.repeat(Math.floor(r.rating)) + (r.rating % 1 >= 0.5 ? '&#9734;' : '');
+    return `<div class="recipe-card rounded-2xl overflow-hidden border" style="background:var(--bg-card);border-color:var(--border);animation:slideUp 0.5s ease ${i*0.06}s both;">
+      <div class="relative aspect-video overflow-hidden">
+        <img src="${r.image}" alt="${r.name}" class="recipe-img w-full h-full object-cover" loading="lazy">
+        <button onclick="event.stopPropagation();toggleFavorite(${r.id})" class="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center transition-transform hover:scale-110" aria-label="Favorite" id="favBtn${r.id}">
+          <i class="fa-${isFav?'solid':'regular'} fa-heart text-sm" style="color:${isFav?'#ef4444':'#6b7280'};"></i>
+        </button>
+        <div class="absolute bottom-3 left-3 flex gap-1.5 flex-wrap">
+          <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-white/90 backdrop-blur-sm" style="color:var(--text-primary);">${r.category}</span>
+        </div>
+      </div>
+      <div class="p-4">
+        <h3 class="font-display font-bold text-base mb-2 leading-tight cursor-pointer hover:opacity-80 transition-opacity" style="color:var(--text-primary);" onclick="openRecipeModal(${r.id})">${r.name}</h3>
+        <div class="flex items-center gap-3 text-xs mb-3" style="color:var(--text-muted);">
+          <span><i class="fa-regular fa-clock mr-1"></i>${r.prepTime + r.cookTime} min</span>
+          <span><i class="fa-solid fa-gauge mr-1"></i>${r.difficulty}</span>
+          <span><i class="fa-solid fa-fire mr-1"></i>${r.calories} cal</span>
+        </div>
+        <div class="flex items-center justify-between">
+          <div class="flex gap-1.5 flex-wrap">
+            ${r.tags.slice(0,2).map(t => `<span class="px-2 py-0.5 rounded-full text-[10px] font-medium" style="background:var(--tag-bg);color:var(--text-muted);">${t}</span>`).join('')}
+          </div>
+          <div class="flex items-center gap-0.5 text-xs" style="color:#f59e0b;">
+            <i class="fa-solid fa-star"></i>
+            <span class="font-semibold">${r.rating}</span>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ===== FAVORITES ===== */
+function toggleFavorite(id) {
+  const idx = state.favorites.indexOf(id);
+  if (idx > -1) { state.favorites.splice(idx, 1); showToast('Removed from favorites', 'info'); }
+  else { state.favorites.push(id); showToast('Added to favorites', 'success'); }
+  localStorage.setItem('mealprep-favorites', JSON.stringify(state.favorites));
+  // Update heart button if visible
+  const btn = document.getElementById('favBtn' + id);
+  if (btn) {
+    btn.querySelector('i').className = `fa-${state.favorites.includes(id)?'solid':'regular'} fa-heart text-sm`;
+    btn.querySelector('i').style.color = state.favorites.includes(id) ? '#ef4444' : '#6b7280';
+    btn.classList.add('heart-anim');
+    setTimeout(() => btn.classList.remove('heart-anim'), 600);
+  }
+  // Update modal fav button
+  if (state.currentModalRecipe && state.currentModalRecipe.id === id) updateModalFavBtn();
+  // Re-render current view
+  if (state.currentView === 'favorites') renderFavorites();
+  if (state.currentView === 'recipes') renderRecipeGrid();
+  updateStats();
+}
+
+function renderFavorites() {
+  const grid = document.getElementById('favoritesGrid');
+  const empty = document.getElementById('favoritesEmpty');
+  const favRecipes = recipes.filter(r => state.favorites.includes(r.id));
+  if (!favRecipes.length) { grid.innerHTML = ''; empty.classList.remove('hidden'); return; }
+  empty.classList.add('hidden');
+  grid.innerHTML = favRecipes.map((r, i) => {
+    return `<div class="recipe-card rounded-2xl overflow-hidden border" style="background:var(--bg-card);border-color:var(--border);animation:slideUp 0.5s ease ${i*0.06}s both;">
+      <div class="relative aspect-video overflow-hidden">
+        <img src="${r.image}" alt="${r.name}" class="recipe-img w-full h-full object-cover" loading="lazy">
+        <button onclick="event.stopPropagation();toggleFavorite(${r.id})" class="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center transition-transform hover:scale-110" aria-label="Remove favorite">
+          <i class="fa-solid fa-heart text-sm" style="color:#ef4444;"></i>
+        </button>
+      </div>
+      <div class="p-4">
+        <h3 class="font-display font-bold text-base mb-2 leading-tight cursor-pointer hover:opacity-80 transition-opacity" style="color:var(--text-primary);" onclick="openRecipeModal(${r.id})">${r.name}</h3>
+        <div class="flex items-center gap-3 text-xs mb-3" style="color:var(--text-muted);">
+          <span><i class="fa-regular fa-clock mr-1"></i>${r.prepTime + r.cookTime} min</span>
+          <span><i class="fa-solid fa-gauge mr-1"></i>${r.difficulty}</span>
+        </div>
+        <button onclick="openRecipeModal(${r.id})" class="w-full py-2 rounded-lg text-sm font-semibold border transition-colors hover:opacity-80" style="border-color:var(--border);color:var(--text-primary);background:var(--bg-secondary);">View Recipe</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ===== RECIPE MODAL ===== */
+function openRecipeModal(id) {
+  const r = recipes.find(x => x.id === id);
+  if (!r) return;
+  state.currentModalRecipe = r;
+  if (!state.currentServings[id]) state.currentServings[id] = r.defaultServings;
+
+  document.getElementById('modalImage').src = r.image;
+  document.getElementById('modalImage').alt = r.name;
+  document.getElementById('modalTitle').textContent = r.name;
+  document.getElementById('modalDesc').textContent = r.description;
+  document.getElementById('modalPrep').textContent = `Prep: ${r.prepTime} min`;
+  document.getElementById('modalCook').textContent = `Cook: ${r.cookTime} min`;
+  document.getElementById('modalDiff').textContent = r.difficulty;
+  document.getElementById('modalRating').textContent = r.rating;
+  document.getElementById('modalServings').textContent = state.currentServings[id];
+
+  // Tags
+  document.getElementById('modalTags').innerHTML = r.tags.map(t =>
+    `<span class="px-3 py-1 rounded-full text-xs font-medium" style="background:var(--accent-light);color:var(--accent);">${t}</span>`
+  ).join('') + `<span class="px-3 py-1 rounded-full text-xs font-medium" style="background:var(--tag-bg);color:var(--text-muted);">${r.category}</span>`;
+
+  // Nutrition
+  const dv = { cal: 2000, pro: 50, carb: 300, fat: 65, fib: 25 };
+  const servings = state.currentServings[id];
+  const scale = servings / r.defaultServings;
+  document.getElementById('nutCal').textContent = Math.round(r.calories * scale);
+  document.getElementById('nutPro').textContent = Math.round(r.protein * scale) + 'g';
+  document.getElementById('nutCarb').textContent = Math.round(r.carbs * scale) + 'g';
+  document.getElementById('nutFat').textContent = Math.round(r.fat * scale) + 'g';
+  document.getElementById('nutFib').textContent = Math.round(r.fiber * scale) + 'g';
+  document.getElementById('barCal').style.width = Math.min(100, (r.calories * scale / dv.cal) * 100) + '%';
+  document.getElementById('barPro').style.width = Math.min(100, (r.protein * scale / dv.pro) * 100) + '%';
+  document.getElementById('barCarb').style.width = Math.min(100, (r.carbs * scale / dv.carb) * 100) + '%';
+  document.getElementById('barFat').style.width = Math.min(100, (r.fat * scale / dv.fat) * 100) + '%';
+  document.getElementById('barFib').style.width = Math.min(100, (r.fiber * scale / dv.fib) * 100) + '%';
+
+  // Ingredients
+  renderModalIngredients();
+
+  // Instructions
+  document.getElementById('modalInstructions').innerHTML = r.instructions.map((step, i) =>
+    `<li class="flex gap-3"><span class="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold" style="background:var(--accent-light);color:var(--accent);">${i+1}</span><p class="text-sm leading-relaxed pt-0.5" style="color:var(--text-secondary);">${step}</p></li>`
+  ).join('');
+
+  updateModalFavBtn();
+
+  const modal = document.getElementById('recipeModal');
+  modal.classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+}
+
+function renderModalIngredients() {
+  const r = state.currentModalRecipe;
+  if (!r) return;
+  const servings = state.currentServings[r.id] || r.defaultServings;
+  const scale = servings / r.defaultServings;
+  document.getElementById('modalIngredients').innerHTML = r.ingredients.map(ing => {
+    let amt = ing.amount * scale;
+    // Smart formatting
+    let displayAmt;
+    if (ing.unit === 'to taste' || ing.unit === 'pinch') { displayAmt = ''; }
+    else if (amt === 0) { displayAmt = ''; }
+    else if (amt >= 1 && amt === Math.floor(amt)) { displayAmt = amt.toString(); }
+    else { displayAmt = amt.toFixed(amt < 1 ? 2 : 1).replace(/\.0$/, '').replace(/(\.\d)0$/, '$1'); }
+    return `<div class="ingredient-item flex items-center gap-3 p-2.5 rounded-lg transition-colors cursor-pointer" style="background:var(--bg-secondary);" onclick="this.classList.toggle('checked')">
+      <div class="check-box w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0" style="border-color:var(--border);">
+        <i class="fa-solid fa-check text-[10px] hidden" style="color:var(--accent);"></i>
+      </div>
+      <span class="ingredient-name text-sm" style="color:var(--text-primary);">${displayAmt ? displayAmt + ' ' + ing.unit + ' ' : ''}${ing.name}</span>
+    </div>`;
+  }).join('');
+
+  // Add click handler for check animation
+  document.querySelectorAll('.ingredient-item').forEach(item => {
+    item.addEventListener('click', function() {
+      const icon = this.querySelector('.check-box i');
+      const box = this.querySelector('.check-box');
+      if (this.classList.contains('checked')) {
+        icon.classList.remove('hidden');
+        icon.classList.add('check-anim');
+        box.style.background = 'var(--accent)';
+        box.style.borderColor = 'var(--accent)';
+        icon.style.color = '#fff';
+        setTimeout(() => icon.classList.remove('check-anim'), 300);
+      } else {
+        icon.classList.add('hidden');
+        box.style.background = '';
+        box.style.borderColor = 'var(--border)';
+      }
+    });
+  });
+}
+
+function adjustServings(delta) {
+  const r = state.currentModalRecipe;
+  if (!r) return;
+  let current = state.currentServings[r.id] || r.defaultServings;
+  current = Math.max(1, Math.min(20, current + delta));
+  state.currentServings[r.id] = current;
+  document.getElementById('modalServings').textContent = current;
+  // Re-scale nutrition
+  const scale = current / r.defaultServings;
+  const dv = { cal: 2000, pro: 50, carb: 300, fat: 65, fib: 25 };
+  document.getElementById('nutCal').textContent = Math.round(r.calories * scale);
+  document.getElementById('nutPro').textContent = Math.round(r.protein * scale) + 'g';
+  document.getElementById('nutCarb').textContent = Math.round(r.carbs * scale) + 'g';
+  document.getElementById('nutFat').textContent = Math.round(r.fat * scale) + 'g';
+  document.getElementById('nutFib').textContent = Math.round(r.fiber * scale) + 'g';
+  document.getElementById('barCal').style.width = Math.min(100, (r.calories * scale / dv.cal) * 100) + '%';
+  document.getElementById('barPro').style.width = Math.min(100, (r.protein * scale / dv.pro) * 100) + '%';
+  document.getElementById('barCarb').style.width = Math.min(100, (r.carbs * scale / dv.carb) * 100) + '%';
+  document.getElementById('barFat').style.width = Math.min(100, (r.fat * scale / dv.fat) * 100) + '%';
+  document.getElementById('barFib').style.width = Math.min(100, (r.fiber * scale / dv.fib) * 100) + '%';
+  // Re-scale ingredients
+  renderModalIngredients();
+}
+
+function updateModalFavBtn() {
+  if (!state.currentModalRecipe) return;
+  const btn = document.getElementById('modalFavBtn');
+  const isFav = state.favorites.includes(state.currentModalRecipe.id);
+  btn.innerHTML = `<i class="fa-${isFav?'solid':'regular'} fa-heart" style="color:${isFav?'#ef4444':'#fff'};"></i>`;
+}
+
+function toggleModalFavorite() {
+  if (!state.currentModalRecipe) return;
+  toggleFavorite(state.currentModalRecipe.id);
+}
+
+function closeRecipeModal() {
+  document.getElementById('recipeModal').classList.add('hidden');
+  document.body.style.overflow = '';
+  state.currentModalRecipe = null;
+}
+
+function addToPlannerFromModal() {
+  if (!state.currentModalRecipe) return;
+  // Default to next empty slot or today
+  const today = new Date().getDay();
+  const dayIdx = today === 0 ? 6 : today - 1; // 0=Mon
+  state.addMealTarget = { day: dayIdx, meal: 0 }; // Breakfast
+  openAddMealModal();
+}
+
+/* ===== MEAL PLANNER ===== */
+function renderPlanner() {
+  // Desktop grid
+  const desktopBody = document.getElementById('plannerGridDesktop');
+  const mobileContainer = document.getElementById('plannerGridMobile');
+  const emptyEl = document.getElementById('plannerEmpty');
+  let hasMeals = false;
+
+  // Desktop
+  desktopBody.innerHTML = mealTypes.map((meal, mi) => {
+    return `<tr>
+      <td class="p-3 text-xs font-semibold uppercase tracking-wider align-top" style="color:var(--text-muted);background:var(--bg-secondary);border-left:1px solid var(--border);${mi<mealTypes.length-1?'border-bottom:1px solid var(--border);':''}">${meal}</td>
+      ${days.map((day, di) => {
+        const key = `${di}-${mi}`;
+        const recipeId = state.mealPlan[key];
+        const r = recipeId ? recipes.find(x => x.id === recipeId) : null;
+        if (r) hasMeals = true;
+        return `<td class="p-2 align-top" style="border-left:1px solid var(--border);${mi<mealTypes.length-1?'border-bottom:1px solid var(--border);':''}min-width:120px;">
+          ${r ? `<div class="rounded-xl overflow-hidden border cursor-pointer group" style="border-color:var(--border);" onclick="openRecipeModal(${r.id})">
+            <div class="aspect-video overflow-hidden"><img src="${r.image}" alt="${r.name}" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" loading="lazy"></div>
+            <div class="p-2">
+              <p class="text-[11px] font-medium leading-tight truncate" style="color:var(--text-primary);">${r.name}</p>
+              <button onclick="event.stopPropagation();removeMeal('${key}')" class="text-[10px] mt-1 transition-colors hover:opacity-70" style="color:var(--text-muted);"><i class="fa-solid fa-xmark mr-0.5"></i>Remove</button>
+            </div>
+          </div>` : `<button onclick="openAddMealModalFor(${di},${mi})" class="w-full aspect-video rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-1 transition-colors hover:opacity-70" style="border-color:var(--border);color:var(--text-muted);">
+            <i class="fa-solid fa-plus text-sm"></i>
+            <span class="text-[10px]">Add</span>
+          </button>`}
+        </td>`;
+      }).join('')}
+    </tr>`;
+  }).join('');
+
+  // Mobile
+  mobileContainer.innerHTML = days.map((day, di) => {
+    return `<div class="rounded-2xl border overflow-hidden" style="background:var(--bg-card);border-color:var(--border);">
+      <div class="px-4 py-3 font-semibold text-sm" style="background:var(--bg-secondary);color:var(--text-primary);">${day}</div>
+      <div class="p-3 grid grid-cols-3 gap-2">
+        ${mealTypes.map((meal, mi) => {
+          const key = `${di}-${mi}`;
+          const recipeId = state.mealPlan[key];
+          const r = recipeId ? recipes.find(x => x.id === recipeId) : null;
+          if (r) hasMeals = true;
+          return `<div>
+            <div class="text-[10px] font-semibold uppercase tracking-wider mb-1.5" style="color:var(--text-muted);">${meal}</div>
+            ${r ? `<div class="rounded-lg overflow-hidden border cursor-pointer" style="border-color:var(--border);" onclick="openRecipeModal(${r.id})">
+              <div class="aspect-square overflow-hidden"><img src="${r.image}" alt="${r.name}" class="w-full h-full object-cover" loading="lazy"></div>
+              <div class="p-1.5">
+                <p class="text-[10px] font-medium leading-tight truncate" style="color:var(--text-primary);">${r.name}</p>
+                <button onclick="event.stopPropagation();removeMeal('${key}')" class="text-[9px] mt-0.5" style="color:var(--text-muted);"><i class="fa-solid fa-xmark"></i></button>
+              </div>
+            </div>` : `<button onclick="openAddMealModalFor(${di},${mi})" class="w-full aspect-square rounded-lg border-2 border-dashed flex items-center justify-center" style="border-color:var(--border);color:var(--text-muted);"><i class="fa-solid fa-plus text-xs"></i></button>`}
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+  }).join('');
+
+  emptyEl.classList.toggle('hidden', hasMeals);
+  updateStats();
+}
+
+function openAddMealModalFor(dayIdx, mealIdx) {
+  state.addMealTarget = { day: dayIdx, meal: mealIdx };
+  openAddMealModal();
+}
+
+function openAddMealModal() {
+  const modal = document.getElementById('addMealModal');
+  modal.classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+  document.getElementById('addMealSearch').value = '';
+  renderAddMealOptions('');
+  setTimeout(() => document.getElementById('addMealSearch').focus(), 100);
+}
+
+function closeAddMealModal() {
+  document.getElementById('addMealModal').classList.add('hidden');
+  document.body.style.overflow = '';
+  state.addMealTarget = null;
+}
+
+function renderAddMealOptions(query) {
+  const container = document.getElementById('addMealOptions');
+  const q = query.toLowerCase().trim();
+  let filtered = recipes;
+  if (q) {
+    filtered = recipes.filter(r => r.name.toLowerCase().includes(q) || r.category.toLowerCase().includes(q));
+  }
+  container.innerHTML = filtered.map(r => `
+    <button class="w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-colors hover:opacity-80" style="background:var(--bg-secondary);color:var(--text-primary);" onclick="selectMealForPlanner(${r.id})">
+      <img src="${r.image}" class="w-12 h-12 rounded-lg object-cover flex-shrink-0" alt="">
+      <div class="min-w-0">
+        <div class="text-sm font-medium truncate">${r.name}</div>
+        <div class="text-xs" style="color:var(--text-muted);">${r.category} &middot; ${r.prepTime + r.cookTime} min</div>
+      </div>
+    </button>
+  `).join('');
+}
+
+function filterAddMealOptions(query) { renderAddMealOptions(query); }
+
+function selectMealForPlanner(recipeId) {
+  if (!state.addMealTarget) return;
+  const key = `${state.addMealTarget.day}-${state.addMealTarget.meal}`;
+  state.mealPlan[key] = recipeId;
+  localStorage.setItem('mealprep-mealplan', JSON.stringify(state.mealPlan));
+  closeAddMealModal();
+  renderPlanner();
+  const r = recipes.find(x => x.id === recipeId);
+  showToast(`Added "${r.name}" to ${days[state.addMealTarget.day]} ${mealTypes[state.addMealTarget.meal]}`, 'success');
+  // Also close recipe modal if open
+  if (state.currentModalRecipe) closeRecipeModal();
+}
+
+function removeMeal(key) {
+  delete state.mealPlan[key];
+  localStorage.setItem('mealprep-mealplan', JSON.stringify(state.mealPlan));
+  renderPlanner();
+  showToast('Meal removed', 'info');
+}
+
+function clearMealPlan() {
+  state.mealPlan = {};
+  localStorage.setItem('mealprep-mealplan', JSON.stringify(state.mealPlan));
+  renderPlanner();
+  showToast('Meal plan cleared', 'info');
+}
+
+/* ===== GROCERY LIST ===== */
+function generateGroceryList() {
+  const container = document.getElementById('groceryList');
+  const emptyEl = document.getElementById('groceryEmpty');
+  const progressEl = document.getElementById('groceryProgress');
+  const barEl = document.getElementById('groceryBar');
+
+  // Aggregate ingredients from meal plan
+  const ingredientMap = {};
+  Object.values(state.mealPlan).forEach(recipeId => {
+    const r = recipes.find(x => x.id === recipeId);
+    if (!r) return;
+    r.ingredients.forEach(ing => {
+      if (ing.unit === 'to taste' || ing.unit === 'pinch') return;
+      const key = ing.name.toLowerCase();
+      if (ingredientMap[key]) {
+        // Combine amounts if same unit
+        if (ingredientMap[key].unit === ing.unit) {
+          ingredientMap[key].amount += ing.amount;
+        } else {
+          ingredientMap[key + '_alt_' + ing.unit] = { name: ing.name, amount: ing.amount, unit: ing.unit };
+        }
+      } else {
+        ingredientMap[key] = { name: ing.name, amount: ing.amount, unit: ing.unit };
+      }
+    });
+  });
+
+  const items = Object.values(ingredientMap);
+  state.groceryItems = items;
+
+  if (!items.length) {
+    container.innerHTML = '';
+    emptyEl.classList.remove('hidden');
+    progressEl.textContent = '0 / 0';
+    barEl.style.width = '0%';
+    return;
+  }
+  emptyEl.classList.add('hidden');
+
+  container.innerHTML = items.map((ing, i) => {
+    const checked = state.groceryChecked[ing.name.toLowerCase()] || false;
+    let displayAmt = ing.amount;
+    if (displayAmt >= 1 && displayAmt === Math.floor(displayAmt)) displayAmt = displayAmt.toString();
+    else displayAmt = displayAmt.toFixed(displayAmt < 1 ? 2 : 1).replace(/\.0$/, '').replace(/(\.\d)0$/, '$1');
+    return `<div class="ingredient-item flex items-center gap-3 p-3 rounded-xl border mb-2 transition-all ${checked?'checked':''}" style="background:var(--bg-card);border-color:var(--border);" data-idx="${i}" onclick="toggleGroceryItem(this,'${ing.name.toLowerCase()}')">
+      <div class="check-box w-6 h-6 rounded-lg border-2 flex items-center justify-center flex-shrink-0 ${checked?'check-anim':''}" style="border-color:${checked?'var(--accent)':'var(--border)'};background:${checked?'var(--accent)':''};">
+        <i class="fa-solid fa-check text-xs ${checked?'':'hidden'}" style="color:#fff;"></i>
+      </div>
+      <span class="ingredient-name text-sm flex-1" style="color:var(--text-primary);">${displayAmt} ${ing.unit} ${ing.name}</span>
+    </div>`;
+  }).join('');
+
+  updateGroceryProgress();
+}
+
+function toggleGroceryItem(el, key) {
+  const isChecked = el.classList.toggle('checked');
+  state.groceryChecked[key] = isChecked;
+  localStorage.setItem('mealprep-grocery', JSON.stringify(state.groceryChecked));
+  const icon = el.querySelector('.check-box i');
+  const box = el.querySelector('.check-box');
+  if (isChecked) {
+    icon.classList.remove('hidden');
+    icon.classList.add('check-anim');
+    box.style.background = 'var(--accent)';
+    box.style.borderColor = 'var(--accent)';
+    setTimeout(() => icon.classList.remove('check-anim'), 300);
+  } else {
+    icon.classList.add('hidden');
+    box.style.background = '';
+    box.style.borderColor = 'var(--border)';
+  }
+  updateGroceryProgress();
+}
+
+function updateGroceryProgress() {
+  const total = state.groceryItems.length;
+  const checked = state.groceryItems.filter(i => state.groceryChecked[i.name.toLowerCase()]).length;
+  document.getElementById('groceryProgress').textContent = `${checked} / ${total}`;
+  document.getElementById('groceryBar').style.width = total ? (checked / total * 100) + '%' : '0%';
+}
+
+/* ===== STATISTICS ===== */
+function updateStats() {
+  const mealsCount = Object.keys(state.mealPlan).length;
+  const groceryCount = state.groceryItems.length;
+  const favCount = state.favorites.length;
+  document.getElementById('statMeals').dataset.target = mealsCount;
+  document.getElementById('statGrocery').dataset.target = groceryCount;
+  document.getElementById('statFavorites').dataset.target = favCount;
+  animateCounters();
+}
+
+function animateCounters() {
+  document.querySelectorAll('.counter').forEach(el => {
+    const target = parseInt(el.dataset.target) || 0;
+    const duration = 1000;
+    const start = performance.now();
+    const startVal = parseInt(el.textContent) || 0;
+    function step(now) {
+      const elapsed = now - start;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3); // ease out cubic
+      el.textContent = Math.round(startVal + (target - startVal) * eased);
+      if (progress < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  });
+}
+
+/* ===== SCROLL REVEAL ===== */
+function initScrollReveal() {
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        // Trigger counters when stats section is visible
+        if (entry.target.querySelector('.counter')) animateCounters();
+      }
+    });
+  }, { threshold: 0.15 });
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+}
+
+/* ===== FLOATING ACTION BUTTON ===== */
+function initFAB() {
+  const fab = document.getElementById('fabBtn');
+  window.addEventListener('scroll', () => {
+    fab.style.display = window.scrollY > 400 ? 'flex' : 'none';
+  });
+}
+
+/* ===== KEYBOARD NAVIGATION ===== */
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    if (!document.getElementById('addMealModal').classList.contains('hidden')) closeAddMealModal();
+    else if (!document.getElementById('recipeModal').classList.contains('hidden')) closeRecipeModal();
+    else if (!document.getElementById('themeDropdown').classList.contains('hidden')) toggleThemeDropdown(true);
+  }
+});
+
+/* ===== INITIALIZATION ===== */
+function init() {
+  // Set saved theme
+  document.documentElement.setAttribute('data-theme', state.currentTheme);
+
+  // Pre-populate some meal plan data if empty
+  if (!Object.keys(state.mealPlan).length) {
+    state.mealPlan = {
+      '0-0': 1,  // Mon Breakfast: Avocado Toast
+      '0-1': 3,  // Mon Lunch: Quinoa Bowl
+      '0-2': 5,  // Mon Dinner: Salmon
+      '1-0': 10, // Tue Breakfast: Smoothie Bowl
+      '1-1': 12, // Tue Lunch: Caprese Salad
+      '1-2': 11, // Tue Dinner: Tikka Masala
+      '2-0': 2,  // Wed Breakfast: Yogurt Parfait
+      '2-1': 4,  // Wed Lunch: Caesar Salad
+      '2-2': 6,  // Wed Dinner: Beef Stir-Fry
+      '3-2': 7,  // Thu Dinner: Lentil Soup
+      '4-1': 3,  // Fri Lunch: Quinoa Bowl
+      '5-0': 8,  // Sat Breakfast: Banana Muffins
+      '5-2': 11, // Sat Dinner: Tikka Masala
+      '6-0': 1,  // Sun Breakfast: Avocado Toast
+      '6-2': 9   // Sun Dinner: Chocolate Mousse
+    };
+    localStorage.setItem('mealprep-mealplan', JSON.stringify(state.mealPlan));
+  }
+
+  // Pre-populate some favorites
+  if (!state.favorites.length) {
+    state.favorites = [5, 11, 10];
+    localStorage.setItem('mealprep-favorites', JSON.stringify(state.favorites));
+  }
+
+  // Render everything
+  renderCollections();
+  renderFilters();
+  renderRecipeGrid();
+  renderPlanner();
+  updateStats();
+  initScrollReveal();
+  initFAB();
+
+  // Initial skeleton loader simulation
+  setTimeout(() => {
+    document.querySelectorAll('.skeleton').forEach(s => s.classList.remove('skeleton'));
+  }, 800);
+}
+
+// Run on DOM ready
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
