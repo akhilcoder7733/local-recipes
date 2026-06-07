@@ -159,8 +159,12 @@ body {
 
 /* Mobile bottom nav */
 .bottom-nav { display: none; }
-@media (max-width: 768px) { .bottom-nav { display: flex; } .desktop-nav { display: none !important; } }
-
+/* Change this block in your <style> section */
+@media (max-width: 768px) { 
+  .bottom-nav { display: flex; } 
+  /* Don't hide the whole .desktop-nav, only the internal links */
+  .desktop-nav .md\:flex { display: none !important; } 
+}
 /* Progress bar */
 .progress-fill { transition: width 0.8s ease; }
 
